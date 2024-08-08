@@ -4,7 +4,11 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.generics import CreateAPIView, ListAPIView
-from rest_framework.exceptions import NotAuthenticated, PermissionDenied
+from rest_framework.exceptions import (
+    NotAuthenticated,
+    PermissionDenied,
+    ValidationError,
+)
 from rest_framework.response import Response
 
 from menu.models import Menu, Vote
@@ -17,6 +21,10 @@ from menu.serializers import (
 
 
 class UploadMenu(CreateAPIView):
+    """
+    One restaurant can upload only one menu a day.
+    """
+
     serializer_class = MenuUploadSerializer
     queryset = Menu.objects.select_related("restaurant").prefetch_related("votes").all()
     permission_classes = [IsRestaurant]
@@ -25,7 +33,7 @@ class UploadMenu(CreateAPIView):
         if self.queryset.filter(
             restaurant=self.request.user, created_at=datetime.date.today()
         ):
-            raise PermissionDenied(
+            raise ValidationError(
                 detail="You have already uploaded your menu for today!"
             )
         return serializer.save(restaurant=self.request.user)
@@ -78,12 +86,12 @@ def vote_for_menu(request, pk: int):
     menu = get_object_or_404(Menu, id=pk)
     build_version = request.headers.get("Build-Version")
     if menu.created_at != datetime.date.today():
-        return Response(
+        return ValidationError(
             f"This menu is too old for voting. "
             f"P.S. Your build version is {build_version}"
         )
     if Vote.objects.filter(user=request.user, created_at=datetime.date.today()):
-        return Response(
+        return ValidationError(
             f"You have already voted today. "
             f"P.S. Your build version is {build_version}"
         )
