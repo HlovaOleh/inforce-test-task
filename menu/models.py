@@ -11,6 +11,14 @@ class Menu(models.Model):
     created_at = models.DateField(auto_now_add=True)
     num_votes = models.IntegerField(default=0)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["restaurant", "created_at"],
+                name="one_menu_per_restaurant_per_day_constraint",
+            )
+        ]
+
     def str(self):
         return f"{self.name}, {self.restaurant.username}, {self.created_at}"
 
@@ -20,3 +28,4 @@ class Vote(models.Model):
         get_user_model(), on_delete=models.CASCADE, related_name="votes"
     )
     menu = models.ForeignKey(Menu, on_delete=models.CASCADE, related_name="votes")
+    created_at = models.DateField(auto_now_add=True)
