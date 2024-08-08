@@ -16,8 +16,10 @@ packaging==24.1
 pathspec==0.12.1
 platformdirs==4.2.2
 pluggy==1.5.0
+psycopg2==2.9.9
 PyJWT==2.9.0
 pytest==8.3.2
+pytest-django==4.8.0
 python-dotenv==1.0.1
 PyYAML==6.0.2
 referencing==0.35.1
